@@ -6,13 +6,16 @@ from urllib.parse import urlparse, parse_qsl
 
 import requests
 
+import gzip
+import io
+
 
 PORT = 80
 REGION_ALL = 'all'
 CHUNKSIZE = int(os.getenv('CHUNK_SIZE', 64 * 1024))
 
 PLAYLIST_URL = 'playlist.m3u8'
-EPG_URL = 'epg.xml.gz'
+EPG_URL = 'epg.xml'
 STATUS_URL = ''
 APP_URL = 'https://i.mjh.nz/SamsungTVPlus/.app.json'
 
@@ -75,7 +78,7 @@ class Handler(BaseHTTPRequestHandler):
             group = channel['group']
             name = channel['name']
             url = channel['url']
-            channel_id = f'samsung-{key}'
+            channel_id = f'{key}'
 
             # skip no urls or widevine channels
             if not url or channel.get('license_url'):
@@ -86,17 +89,36 @@ class Handler(BaseHTTPRequestHandler):
                 continue
 
             chno = ''
+            chno2 = ''
             if start_chno is not None:
                 if start_chno > 0:
                     chno = f' tvg-chno="{start_chno}"'
                     start_chno += 1
             elif channel.get('chno') is not None:
+                chno2 = ' tvh-chnum="{}"'.format(channel['chno'])                
                 chno = ' tvg-chno="{}"'.format(channel['chno'])
 
-            self.wfile.write(f'#EXTINF:-1 channel-id="{channel_id}" tvg-id="{key}" tvg-logo="{logo}" group-title="{group}"{chno},{name}\n{url}\n'.encode('utf8'))
+
+            #self.wfile.write(f'#EXTINF:-1 tvg-id="{channel_id}" tvg-name="{key}" tvg-logo="{logo}" group-title="{group}"{chno},{name}\n{url}\n'.encode('utf8'))
+            #self.wfile.write(f'#EXTINF:-1 tvg-id="{channel_id}" tvg-name="{key}" tvg-logo="{logo}" group-title="{group}"{chno}{chno2},{name}\npipe://ffmpeg -loglevel quiet -i "{url}" -c copy -metadata service_provider=sjva_klive2 -metadata service_name="{channel_id}" -c:v copy -c:v copy -f mpegts -tune zerolatency pipe:1\n'.encode('utf8'))
+            #self.wfile.write(f'#EXTINF:-1 tvg-id="{channel_id}" tvg-name="{name}" tvg-logo="{logo}" group-title="{group}"{chno}{chno2},{name}\npipe://ffmpeg -loglevel quiet -i "{url}" -c copy -metadata service_provider=sjva_klive2 -metadata service_name="{channel_id}" -c:v copy -c:v copy -f mpegts -tune zerolatency pipe:1\n'.encode('utf8'))
+            self.wfile.write(f'#EXTINF:-1 tvg-id="{channel_id}" tvg-name="{name}" tvg-logo="{logo}" group-title="{group}"{chno}{chno2},{name}\n{url}"\n'.encode('utf8'))
 
     def _epg(self):
-        self._proxy(f'https://i.mjh.nz/SamsungTVPlus/{REGION_ALL}.xml.gz')
+        gzip_url = f'https://i.mjh.nz/SamsungTVPlus/{REGION_ALL}.xml.gz'
+        # 압축된 데이터 가져오기
+        response = requests.get(gzip_url)
+            # 압축 해제
+        with gzip.GzipFile(fileobj=io.BytesIO(response.content)) as gz_file:
+            uncompressed_content = gz_file.read()
+        
+        # 응답 헤더 설정
+        self.send_response(200)
+        self.send_header('Content-Type', 'application/xml')
+        self.end_headers()
+        
+        # 압축 해제된 XML 데이터 전송
+        self.wfile.write(uncompressed_content)
 
     def _proxy(self, url):
         resp = requests.get(url)
