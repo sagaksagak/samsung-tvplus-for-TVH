@@ -2,9 +2,10 @@ services:
   samsung-tvplus:
     container_name: samsung-tvplus
     environment:
-      - REGIONS=at,ca,ch,de,es,fr,gb,in,it,kr,us
-      - TZ=Pacific/Auckland
-    image: matthuisman/samsung-tvplus-for-channels
+      - REGIONS=kr,us,gb,ca,at,ch,de,es,fr,in,it
+      - TZ=Asia/Seoul
+      - LANG=ko_kr.UTF-8
+    image: sagaksagak/samsung-tvplus-for-tvh
     ports:
-      - 8182:80
+      - 8181:80
     restart: unless-stopped
