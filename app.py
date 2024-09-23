@@ -102,7 +102,7 @@ class Handler(BaseHTTPRequestHandler):
             #self.wfile.write(f'#EXTINF:-1 tvg-id="{channel_id}" tvg-name="{key}" tvg-logo="{logo}" group-title="{group}"{chno},{name}\n{url}\n'.encode('utf8'))
             #self.wfile.write(f'#EXTINF:-1 tvg-id="{channel_id}" tvg-name="{key}" tvg-logo="{logo}" group-title="{group}"{chno}{chno2},{name}\npipe://ffmpeg -loglevel quiet -i "{url}" -c copy -metadata service_provider=sjva_klive2 -metadata service_name="{channel_id}" -c:v copy -c:v copy -f mpegts -tune zerolatency pipe:1\n'.encode('utf8'))
             #self.wfile.write(f'#EXTINF:-1 tvg-id="{channel_id}" tvg-name="{name}" tvg-logo="{logo}" group-title="{group}"{chno}{chno2},{name}\npipe://ffmpeg -loglevel quiet -i "{url}" -c copy -metadata service_provider=sjva_klive2 -metadata service_name="{channel_id}" -c:v copy -c:v copy -f mpegts -tune zerolatency pipe:1\n'.encode('utf8'))
-            self.wfile.write(f'#EXTINF:-1 tvg-id="{channel_id}" tvg-name="{name}" tvg-logo="{logo}" group-title="{group}"{chno}{chno2},{name}\n{url}"\n'.encode('utf8'))
+            self.wfile.write(f'#EXTINF:-1 tvg-id="{channel_id}" tvg-name="{name}" tvg-logo="{logo}" group-title="{group}"{chno}{chno2},{name}\n{url}\n'.encode('utf8'))
 
     def _epg(self):
         gzip_url = f'https://i.mjh.nz/SamsungTVPlus/{REGION_ALL}.xml.gz'
